@@ -1,0 +1,23 @@
+{
+  "short_name": "Fergus Buffet flow",
+  "name": "Fergus Buffet flow - Gestor de Buffet en Tiempo Real",
+  "icons": [
+    {
+      "src": "app_icon.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "app_icon_512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "./index.html",
+  "background_color": "#060913",
+  "theme_color": "#080c14",
+  "display": "standalone",
+  "orientation": "landscape"
+}
