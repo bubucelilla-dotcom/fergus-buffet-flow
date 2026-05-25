@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fergus Buffet flow - Gestión en Tiempo Real</title>
+  
+  <!-- SEO & PWA Meta Tags -->
+  <meta name="description" content="Gestión inteligente y en tiempo real para salas de buffet. Monitoreo integrado de puerta, cocina, sala y planos de mesas.">
+  <meta name="theme-color" content="#080c14">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  
+  <!-- Font Awesome Icons & Google Fonts -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Ambient background glow blobs -->
+  <div class="glow-blob glow-1"></div>
+  <div class="glow-blob glow-2"></div>
+  
+  <div class="app-container">
+    <!-- Header / Navigation Bar -->
+    <header class="app-header">
+      <div class="logo-area">
+        <div class="logo-icon">
+          <i class="fa-solid fa-utensils"></i>
+        </div>
+        <div class="logo-text">
+          <h1>Fergus Buffet <span>flow</span></h1>
+          <span class="sync-badge" id="sync-status">
+            <span class="sync-dot"></span> Sincronizado
+          </span>
+        </div>
+      </div>
+      
+      <nav class="role-selector">
+        <button class="nav-btn active" data-role="puerta" id="nav-puerta">
+          <i class="fa-solid fa-door-open"></i>
+          <span>Puerta</span>
+          <span class="badge badge-rose" id="badge-waitlist">0</span>
+        </button>
+        <button class="nav-btn" data-role="sala" id="nav-sala">
+          <i class="fa-solid fa-chair"></i>
+          <span>Sala</span>
+        </button>
+        <button class="nav-btn" data-role="cocina" id="nav-cocina">
+          <i class="fa-solid fa-fire-burner"></i>
+          <span>Cocina</span>
+          <span class="badge badge-cyan" id="badge-kitchen">0</span>
+        </button>
+        <button class="nav-btn" data-role="admin" id="nav-admin">
+          <i class="fa-solid fa-sliders"></i>
+          <span>Admin</span>
+        </button>
+      </nav>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="app-main">
+      
+      <!-- ================= PUERTA VIEW ================= -->
+      <section class="view-section active" id="view-puerta">
+        <div class="view-header">
+          <h2><i class="fa-solid fa-door-open text-gradient-rose"></i> Control de Entrada</h2>
+          <p>Registra comensales y asígnalos a mesas disponibles.</p>
+        </div>
+        
+        <div class="door-grid">
+          <!-- Add to waitlist form -->
+          <div class="glass-card waitlist-card">
+            <h3><i class="fa-solid fa-user-plus text-gradient-rose"></i> Nueva Reserva / Espera</h3>
+            <form id="waitlist-form" class="standard-form">
+              <div class="form-group">
+                <label>Número de Habitación</label>
+                <button type="button" class="btn btn-secondary" id="btn-open-room-picker" style="justify-content: space-between; text-align: left; background: rgba(255,255,255,0.05); border: 1px solid var(--border-light); font-weight: normal; color: var(--text-secondary); height: 45px;">
+                  <span><i class="fa-solid fa-hotel" style="margin-right: 8px; color: var(--color-cyan);"></i> <span id="selected-room-label">Tocar para seleccionar...</span></span>
+                  <i class="fa-solid fa-chevron-down" style="font-size: 12px; margin-left: 10px;"></i>
+                </button>
+                <input type="hidden" id="guest-name" required>
+              </div>
+              
+              <div class="form-row">
+                <div class="form-group" style="flex: 2;">
+                  <label>Comensales (Pax)</label>
+                  <div class="pax-selector-group" id="pax-selector-waitlist">
+                    <button type="button" class="pax-btn" data-val="1">1</button>
+                    <button type="button" class="pax-btn active" data-val="2">2</button>
+                    <button type="button" class="pax-btn" data-val="3">3</button>
+                    <button type="button" class="pax-btn" data-val="4">4</button>
+                    <button type="button" class="pax-btn" data-val="5">5</button>
+                    <button type="button" class="pax-btn" data-val="6">6</button>
+                    <button type="button" class="pax-btn" data-val="7">7</button>
+                    <button type="button" class="pax-btn" data-val="8">8</button>
+                    <button type="button" class="pax-btn" data-val="9">9</button>
+                    <button type="button" class="pax-btn" data-val="10">10</button>
+                  </div>
+                  <input type="hidden" id="guest-pax" value="2" required>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                  <label for="guest-priority">Prioridad</label>
+                  <select id="guest-priority">
+                    <option value="normal">Normal</option>
+                    <option value="high">Alta</option>
+                    <option value="vip">VIP 👑</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="guest-notes">Notas / Requerimientos</label>
+                <input type="text" id="guest-notes" placeholder="Ej. Silla de bebé, intolerante al gluten..." autocomplete="off">
+              </div>
+              
+              <button type="submit" class="btn btn-primary btn-glow-rose">
+                <i class="fa-solid fa-plus"></i> Añadir a la Lista
+              </button>
+            </form>
+          </div>
+
+          <!-- Waiting List Queue -->
+          <div class="glass-card queue-card">
+            <div class="card-header-flex">
+              <h3><i class="fa-solid fa-list-ol text-gradient-rose"></i> Lista de Espera</h3>
+              <span class="count-pill" id="waitlist-count">0 en espera</span>
+            </div>
+            <div class="waitlist-container" id="waitlist-list">
+              <!-- Dynamically populated waitlist items -->
+              <div class="empty-state">
+                <i class="fa-regular fa-folder-open"></i>
+                <p>No hay clientes en espera.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Seating / Interactive Table Grid -->
+        <div class="glass-card door-tables-card">
+          <h3><i class="fa-solid fa-hand-pointer text-gradient-blue"></i> Asignación Rápida de Mesas</h3>
+          <p class="section-desc">Selecciona un cliente de la lista y luego toca una mesa verde (Disponible) para sentarlos.</p>
+          <div class="door-tables-grid" id="door-tables-container">
+            <!-- Dynamically populated table list for seating -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= SALA VIEW ================= -->
+      <section class="view-section" id="view-sala">
+        <div class="view-header flex-header">
+          <div>
+            <h2><i class="fa-solid fa-chair text-gradient-blue"></i> Control de Sala (Plano)</h2>
+            <p>Monitoreo visual del estado de las mesas e ingreso de pedidos.</p>
+          </div>
+          <div class="legend-container" style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+            <button class="btn btn-glow-purple" id="btn-open-replenish-modal" style="padding: 8px 16px; font-size: 13px;">
+              <i class="fa-solid fa-arrows-rotate"></i> Solicitar Reposición de Buffet
+            </button>
+            <div style="display: flex; gap: 12px;">
+              <span class="legend-item"><span class="legend-dot status-available"></span> Disponible</span>
+              <span class="legend-item"><span class="legend-dot status-seated"></span> Ocupado</span>
+              <span class="legend-item"><span class="legend-dot status-eating"></span> Comiendo</span>
+              <span class="legend-item"><span class="legend-dot status-cleaning"></span> Sucia</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Alertas de Reposición Listas -->
+        <div id="sala-replenish-ready-banner" class="hidden" style="margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px;">
+          <!-- Dynamically populated ready alerts -->
+        </div>
+        
+        <!-- Floor Plan Canvas Container -->
+        <div class="floor-plan-wrapper">
+          <div class="floor-plan-canvas" id="floor-plan-sala">
+            <!-- Tables rendered dynamically at their coordinates -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= COCINA VIEW ================= -->
+      <section class="view-section" id="view-cocina">
+        <div class="view-header flex-header" style="margin-bottom: 20px;">
+          <div>
+            <h2><i class="fa-solid fa-fire-burner text-gradient-cyan"></i> Monitor de Cocina</h2>
+            <p>Monitoreo de comensales y cola de comandas en tiempo real.</p>
+          </div>
+          <div class="kitchen-stats">
+            <span class="stat-pill"><i class="fa-solid fa-clock"></i> Comandas Activas: <strong id="kitchen-pending-count">0</strong></span>
+          </div>
+        </div>
+
+        <!-- High-Visibility Guest Scoreboard (VISTA PRINCIPAL) -->
+        <div class="kitchen-scoreboard" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 24px;">
+          <div class="scoreboard-card glass-card card-glow-blue" style="text-align: center; padding: 20px; background: rgba(79, 172, 254, 0.03); border-color: rgba(79, 172, 254, 0.15);">
+            <div style="font-size: 13px; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; margin-bottom: 8px;"><i class="fa-solid fa-users"></i> En Sala (Entrados)</div>
+            <div id="kitchen-entered-large" style="font-size: 48px; font-weight: 800; font-family: 'Outfit'; color: var(--color-cyan); text-shadow: 0 0 15px rgba(0, 242, 254, 0.3);">0</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Comensales en buffet</div>
+          </div>
+          <div class="scoreboard-card glass-card card-glow-orange" style="text-align: center; padding: 20px; background: rgba(255, 159, 28, 0.03); border-color: rgba(255, 159, 28, 0.15);">
+            <div style="font-size: 13px; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; margin-bottom: 8px;"><i class="fa-solid fa-pause"></i> En Espera (Por entrar)</div>
+            <div id="kitchen-waiting-large" style="font-size: 48px; font-weight: 800; font-family: 'Outfit'; color: var(--status-eating); text-shadow: 0 0 15px rgba(255, 159, 28, 0.3);">0</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Comensales haciendo cola</div>
+          </div>
+          <div class="scoreboard-card glass-card card-glow-green" style="text-align: center; padding: 20px; background: rgba(46, 196, 182, 0.03); border-color: rgba(46, 196, 182, 0.15);">
+            <div style="font-size: 13px; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; margin-bottom: 8px;"><i class="fa-solid fa-circle-check"></i> Salidos</div>
+            <div id="kitchen-left-large" style="font-size: 48px; font-weight: 800; font-family: 'Outfit'; color: var(--status-available); text-shadow: 0 0 15px rgba(46, 196, 182, 0.3);">0</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Total checkout del servicio</div>
+          </div>
+        </div>
+
+        <!-- Kitchen Kanban Board -->
+        <div class="kitchen-board" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 0; min-height: 480px;">
+          <!-- Pending Column -->
+          <div class="kitchen-column" id="kitchen-col-pending">
+            <div class="column-header border-orange">
+              <h3>En Cola</h3>
+              <span class="column-badge badge-orange" id="col-count-pending">0</span>
+            </div>
+            <div class="order-list" id="list-kitchen-pending">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <!-- Preparing Column -->
+          <div class="kitchen-column" id="kitchen-col-preparing">
+            <div class="column-header border-blue">
+              <h3>Preparando</h3>
+              <span class="column-badge badge-blue" id="col-count-preparing">0</span>
+            </div>
+            <div class="order-list" id="list-kitchen-preparing">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <!-- Ready to Serve Column -->
+          <div class="kitchen-column" id="kitchen-col-ready">
+            <div class="column-header border-green">
+              <h3>Listos</h3>
+              <span class="column-badge badge-green" id="col-count-ready">0</span>
+            </div>
+            <div class="order-list" id="list-kitchen-ready">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= ADMIN VIEW ================= -->
+      <section class="view-section" id="view-admin">
+        <div class="view-header flex-header">
+          <div>
+            <h2><i class="fa-solid fa-sliders text-gradient-purple"></i> Editor de Planos</h2>
+            <p>Diseña la distribución de tu sala de buffet. Añade y mueve mesas.</p>
+          </div>
+          <div class="admin-actions" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+            <button class="btn btn-secondary" id="btn-add-table">
+              <i class="fa-solid fa-plus-circle"></i> Añadir Mesa
+            </button>
+            <button class="btn btn-danger" id="btn-reset-shift" style="background: rgba(255, 8, 68, 0.15); border: 1px solid rgba(255, 8, 68, 0.3); color: var(--color-rose);">
+              <i class="fa-solid fa-rotate-left"></i> Reiniciar Servicio
+            </button>
+            <button class="btn btn-primary btn-glow-purple" id="btn-save-layout">
+              <i class="fa-solid fa-save"></i> Guardar Distribución
+            </button>
+          </div>
+        </div>
+
+        <div class="admin-workspace">
+          <!-- Left Column Container: Table Properties & Buffet Menu Editor -->
+          <div class="admin-sidebar" style="display: flex; flex-direction: column; gap: 20px;">
+            
+            <!-- Table Editor Control Panel -->
+            <div class="glass-card editor-panel" style="padding: 20px;">
+              <h3>Propiedades de Mesa</h3>
+              <div id="editor-properties-empty" class="panel-empty-state" style="padding: 20px;">
+                <i class="fa-solid fa-mouse-pointer"></i>
+                <p>Selecciona una mesa en el plano para editar sus propiedades.</p>
+              </div>
+              <form id="table-properties-form" class="standard-form hidden">
+                <input type="hidden" id="edit-table-id">
+                
+                <div class="form-group">
+                  <label for="edit-table-name">Nombre / Número</label>
+                  <input type="text" id="edit-table-name" placeholder="Mesa 1" required>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="edit-table-capacity">Capacidad (Pax)</label>
+                    <input type="number" id="edit-table-capacity" min="1" max="20" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="edit-table-shape">Forma</label>
+                    <select id="edit-table-shape">
+                      <option value="square">Rectangular</option>
+                      <option value="circle">Circular</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label>Tamaño</label>
+                  <div class="form-row">
+                    <div class="input-with-label">
+                      <span>Ancho</span>
+                      <input type="number" id="edit-table-width" min="40" max="200" step="5">
+                    </div>
+                    <div class="input-with-label">
+                      <span>Alto</span>
+                      <input type="number" id="edit-table-height" min="40" max="200" step="5">
+                    </div>
+                  </div>
+                </div>
+
+                <div class="editor-buttons">
+                  <button type="button" class="btn btn-danger" id="btn-delete-table">
+                    <i class="fa-solid fa-trash"></i> Eliminar Mesa
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Buffet Menu Editor Panel -->
+            <div class="glass-card buffet-editor-card" style="padding: 20px; border-color: rgba(127, 90, 240, 0.25);">
+              <h3 style="font-size: 16px; margin-bottom: 6px;"><i class="fa-solid fa-utensils text-gradient-purple"></i> Platos del Buffet</h3>
+              <p class="modal-info-text" style="margin-bottom: 12px; font-size: 11px;">Gestiona el menú disponible para reposición hoy.</p>
+              
+              <!-- Form to add new item -->
+              <form id="admin-add-dish-form" class="standard-form" style="gap: 8px; margin-bottom: 12px;">
+                <div style="display: flex; gap: 8px;">
+                  <input type="text" id="admin-new-dish-name" placeholder="Añadir plato..." required style="flex: 1; padding: 8px 12px; font-size: 13px;">
+                  <button type="submit" class="btn btn-primary" style="padding: 8px 14px;"><i class="fa-solid fa-plus"></i></button>
+                </div>
+              </form>
+
+              <!-- List of items with delete buttons -->
+              <div id="admin-dish-list" style="display: flex; flex-direction: column; gap: 6px; max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.15); border-radius: 8px; padding: 8px;">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Floor Plan Canvas Editor -->
+          <div class="floor-plan-wrapper edit-mode">
+            <div class="floor-plan-canvas editable" id="floor-plan-editor">
+              <!-- Editable tables loaded here -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ================= MODALS & OVERLAYS ================= -->
+
+  <!-- Table Details Modal (Sala View Detail) -->
+  <div class="modal-overlay" id="modal-table-detail">
+    <div class="glass-card modal-content card-glow-blue">
+      <div class="modal-header">
+        <h3 id="detail-table-title"><i class="fa-solid fa-chair"></i> Mesa X</h3>
+        <button class="modal-close" id="btn-close-detail"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <!-- Table status section -->
+        <div class="detail-status-bar">
+          <span>Estado actual:</span>
+          <span class="status-badge" id="detail-table-status">Disponible</span>
+        </div>
+
+        <div id="detail-occupancy-info" class="hidden">
+          <div class="info-card">
+            <p><strong>Habitación:</strong> <span id="detail-guest-name">Hab. 104</span></p>
+            <p><strong>Comensales:</strong> <span id="detail-guest-pax">4 pax</span></p>
+            <p><strong>Llegada:</strong> <span id="detail-guest-time">18:30</span></p>
+            <p id="detail-guest-notes-wrapper"><strong>Notas:</strong> <span id="detail-guest-notes">-</span></p>
+          </div>
+
+          <!-- Buffet Orders Section -->
+          <div class="orders-section">
+            <h4><i class="fa-solid fa-burger text-gradient-cyan"></i> Pedidos de Buffet</h4>
+            
+            <!-- List of existing orders for this table -->
+            <div class="table-orders-history" id="detail-orders-history">
+              <!-- List of items ordered -->
+            </div>
+
+            <!-- Add new order form -->
+            <div class="new-order-block">
+              <h5>Añadir Pedido</h5>
+              <div class="order-inputs">
+                <select id="select-dish-category">
+                  <option value="Entrantes">Entrantes 🍟</option>
+                  <option value="Sushi & Asiático">Sushi & Asiático 🍣</option>
+                  <option value="Carnes & Parrilla">Carnes & Parrilla 🥩</option>
+                  <option value="Postres">Postres 🍰</option>
+                  <option value="Bebidas">Bebidas 🍹</option>
+                </select>
+                
+                <input type="text" id="input-dish-name" placeholder="Ej. Sushi Roll de Salmón" list="common-dishes" autocomplete="off">
+                <datalist id="common-dishes">
+                  <option value="Sushi Roll Salmón (8 piezas)">
+                  <option value="Gyozas de Cerdo (6 piezas)">
+                  <option value="Noodles con Pollo Yakisoba">
+                  <option value="Bao de Pulled Pork">
+                  <option value="Patatas Bravas Crujientes">
+                  <option value="Croquetas de Jamón">
+                  <option value="Hamburguesa Smash con Queso">
+                  <option value="Entrecot fileteado (200g)">
+                  <option value="Tarta de Queso Fluida">
+                  <option value="Brownie con Helado de Vainilla">
+                </datalist>
+
+                <div class="quantity-control">
+                  <button type="button" class="qty-btn" id="qty-minus">-</button>
+                  <input type="number" id="input-dish-qty" value="1" min="1" max="10">
+                  <button type="button" class="qty-btn" id="qty-plus">+</button>
+                </div>
+
+                <button type="button" class="btn btn-primary" id="btn-add-dish-item">
+                  <i class="fa-solid fa-plus"></i> Añadir
+                </button>
+              </div>
+
+              <!-- Temporary list of items to send -->
+              <div class="pending-basket hidden" id="pending-basket">
+                <h6>Dishes to send:</h6>
+                <ul id="basket-items-list"></ul>
+                <button type="button" class="btn btn-success btn-glow-green" id="btn-submit-order-round">
+                  <i class="fa-solid fa-paper-plane"></i> Enviar Comanda a Cocina
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="detail-available-info">
+          <p class="modal-info-text">Esta mesa está vacía. Puedes asignarle un grupo desde la pestaña de **Puerta** o sentar un grupo rápido directamente aquí:</p>
+          <form id="quick-seat-form" class="standard-form">
+            <div class="form-row" style="flex-direction: column; gap: 14px;">
+              <div class="form-group">
+                <label>Habitación</label>
+                <button type="button" class="btn btn-secondary" id="btn-open-quick-room-picker" style="justify-content: space-between; text-align: left; background: rgba(255,255,255,0.05); border: 1px solid var(--border-light); font-weight: normal; color: var(--text-secondary); height: 42px;">
+                  <span><i class="fa-solid fa-hotel" style="margin-right: 8px; color: var(--color-cyan);"></i> <span id="selected-quick-room-label">Seleccionar...</span></span>
+                </button>
+                <input type="hidden" id="quick-guest-name" required>
+              </div>
+              <div class="form-group">
+                <label>Comensales</label>
+                <div class="pax-selector-group" id="pax-selector-quick">
+                  <button type="button" class="pax-btn" data-val="1">1</button>
+                  <button type="button" class="pax-btn active" data-val="2">2</button>
+                  <button type="button" class="pax-btn" data-val="3">3</button>
+                  <button type="button" class="pax-btn" data-val="4">4</button>
+                  <button type="button" class="pax-btn" data-val="5">5</button>
+                  <button type="button" class="pax-btn" data-val="6">6</button>
+                  <button type="button" class="pax-btn" data-val="7">7</button>
+                  <button type="button" class="pax-btn" data-val="8">8</button>
+                  <button type="button" class="pax-btn" data-val="9">9</button>
+                  <button type="button" class="pax-btn" data-val="10">10</button>
+                </div>
+                <input type="hidden" id="quick-guest-pax" value="2" required>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-success btn-glow-green" style="margin-top: 10px;">
+              <i class="fa-solid fa-chair"></i> Sentar Habitación
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div class="modal-footer" id="detail-actions">
+        <!-- Action buttons depend on state -->
+        <button class="btn btn-warning hidden" id="btn-table-action-dirty">
+          <i class="fa-solid fa-broom"></i> Solicitar Limpieza
+        </button>
+        <button class="btn btn-success hidden" id="btn-table-action-clean">
+          <i class="fa-solid fa-check"></i> Mesa Limpia / Lista
+        </button>
+        <button class="btn btn-danger hidden" id="btn-table-action-checkout">
+          <i class="fa-solid fa-circle-xmark"></i> Liberar Mesa
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Replenishment Modal (Sala View) -->
+  <div class="modal-overlay" id="modal-replenish">
+    <div class="glass-card modal-content card-glow-orange" style="max-width: 500px;">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-arrows-rotate text-gradient-rose"></i> Reposición de Buffet</h3>
+        <button class="modal-close" id="btn-close-replenish"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-info-text" style="margin-bottom: 12px;">Selecciona qué plato del buffet principal está por agotarse para avisar a cocina de inmediato.</p>
+        <div class="replenish-items-list" id="replenish-selector-list" style="display: flex; flex-direction: column; gap: 10px; max-height: 350px; overflow-y: auto; padding: 4px;">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Room Selector Modal -->
+  <div class="modal-overlay" id="modal-room-selector">
+    <div class="glass-card modal-content card-glow-blue" style="max-width: 580px;">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-hotel text-gradient-cyan"></i> Seleccionar Habitación</h3>
+        <button class="modal-close" id="btn-close-rooms"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-info-text" style="margin-bottom: 10px;">Las habitaciones de color rojo ya están ocupadas o en espera.</p>
+        <div class="search-box" style="margin-bottom: 15px;">
+          <input type="text" id="room-search-filter" placeholder="🔍 Buscar número de habitación (Ej. 142)..." autocomplete="off" style="width: 100%; padding: 10px 14px; background: rgba(255,255,255,0.04); border: 1px solid var(--border-light); border-radius: 8px; color: var(--text-primary); font-size: 14px; outline: none; border-color: rgba(255,255,255,0.1);">
+        </div>
+        <div class="rooms-grid" id="rooms-selector-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(75px, 1fr)); gap: 8px; max-height: 320px; overflow-y: auto; padding: 5px;">
+          <!-- Dynamically populated buttons for 214 rooms -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <audio id="order-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-120.wav" preload="auto"></audio>
+
+  <script src="app.js"></script>
+</body>
+</html>
